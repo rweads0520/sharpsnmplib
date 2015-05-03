@@ -16,12 +16,12 @@
 // FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-#if !NETFX_CORE
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Security.Cryptography;
+using PCLCrypto;
 
 namespace Lextm.SharpSnmpLib.Security
 {
@@ -111,40 +111,11 @@ namespace Lextm.SharpSnmpLib.Security
             }
             
             var newLength = div * 8;
-            var result = new byte[newLength];
             var buffer = new byte[newLength];
-
-            var inbuffer = new byte[8];
-            var cipherText = iv;
-            var posIn = 0;
-            var posResult = 0;
             Buffer.BlockCopy(unencryptedData, 0, buffer, 0, unencryptedData.Length);
-
-            using (DES des = new DESCryptoServiceProvider())
-            {
-                des.Mode = CipherMode.ECB;
-                des.Padding = PaddingMode.None;
-
-                using (var transform = des.CreateEncryptor(outKey, null))
-                {
-                    for (var b = 0; b < div; b++)
-                    {
-                        for (var i = 0; i < 8; i++)
-                        {
-                            inbuffer[i] = (byte)(buffer[posIn] ^ cipherText[i]);
-                            posIn++;
-                        }
-                        
-                        transform.TransformBlock(inbuffer, 0, inbuffer.Length, cipherText, 0);
-                        Buffer.BlockCopy(cipherText, 0, result, posResult, cipherText.Length);
-                        posResult += cipherText.Length;
-                    }
-                }
-                
-                des.Clear();
-            }
-
-            return result;
+            var des = WinRTCrypto.SymmetricKeyAlgorithmProvider.OpenAlgorithm(SymmetricAlgorithm.DesCbc);
+            var keyInfo = des.CreateSymmetricKey(outKey);
+            return WinRTCrypto.CryptographicEngine.Encrypt(keyInfo, buffer, iv);
         }
 
         /// <summary>
@@ -194,30 +165,13 @@ namespace Lextm.SharpSnmpLib.Security
                 throw new ArgumentOutOfRangeException("key", "Decryption key has to be at least 16 bytes long.");
             }
 
-            var iv = new byte[8];
-            for (var i = 0; i < 8; ++i)
-            {
-                iv[i] = (byte)(key[8 + i] ^ privacyParameters[i]);
-            }
-            
-            using (DES des = new DESCryptoServiceProvider())
-            {
-                des.Mode = CipherMode.CBC;
-                des.Padding = PaddingMode.Zeros;
+            var iv = GetIV(key, privacyParameters);
 
-                // .NET implementation only takes an 8 byte key
-                var outKey = new byte[8];
-                Buffer.BlockCopy(key, 0, outKey, 0, 8);
-
-                des.Key = outKey;
-                des.IV = iv;
-                using (var transform = des.CreateDecryptor())
-                {
-                    var decryptedData = transform.TransformFinalBlock(encryptedData, 0, encryptedData.Length);
-                    des.Clear();
-                    return decryptedData;
-                }
-            }
+            // DES uses 8 byte keys but we need 16 to encrypt ScopedPdu. Get first 8 bytes and use them as encryption key
+            var outKey = GetKey(key);
+            var des = WinRTCrypto.SymmetricKeyAlgorithmProvider.OpenAlgorithm(SymmetricAlgorithm.DesCbc);
+            var keyInfo = des.CreateSymmetricKey(outKey);
+            return WinRTCrypto.CryptographicEngine.Decrypt(keyInfo, encryptedData, iv);
         }
 
         /// <summary>
@@ -397,4 +351,3 @@ namespace Lextm.SharpSnmpLib.Security
         #endregion
     }
 }
-#endif

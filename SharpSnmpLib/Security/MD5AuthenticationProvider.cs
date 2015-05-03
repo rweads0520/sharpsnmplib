@@ -16,11 +16,11 @@
 // FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-#if !NETFX_CORE
+
 using System;
 using System.Globalization;
 using System.IO;
-using System.Security.Cryptography;
+using PCLCrypto;
 
 namespace Lextm.SharpSnmpLib.Security
 {
@@ -94,36 +94,33 @@ namespace Lextm.SharpSnmpLib.Security
         }
 
         private byte[] _PasswordToKey(byte[] password, byte[] engineId)
-        {            
-            using (MD5 md5 = new MD5CryptoServiceProvider())
+        {
+            var md5 = WinRTCrypto.HashAlgorithmProvider.OpenAlgorithm(HashAlgorithm.Md5);
+            var passwordIndex = 0;
+            var count = 0;
+            /* Use while loop until we've done 1 Megabyte */
+            var sourceBuffer = new byte[1048576];
+            var buf = new byte[64];
+            while (count < 1048576)
             {
-                var passwordIndex = 0;
-                var count = 0;
-                /* Use while loop until we've done 1 Megabyte */
-                var sourceBuffer = new byte[1048576];
-                var buf = new byte[64];
-                while (count < 1048576)
+                for (var i = 0; i < 64; ++i)
                 {
-                    for (var i = 0; i < 64; ++i)
-                    {
-                        // Take the next octet of the password, wrapping
-                        // to the beginning of the password as necessary.
-                        buf[i] = password[passwordIndex++ % password.Length];
-                    }
-                    
-                    Buffer.BlockCopy(buf, 0, sourceBuffer, count, buf.Length);
-                    count += 64;
+                    // Take the next octet of the password, wrapping
+                    // to the beginning of the password as necessary.
+                    buf[i] = password[passwordIndex++%password.Length];
                 }
 
-                var digest = md5.ComputeHash(sourceBuffer);
+                Buffer.BlockCopy(buf, 0, sourceBuffer, count, buf.Length);
+                count += 64;
+            }
 
-                using (var buffer = new MemoryStream())
-                {
-                    buffer.Write(digest, 0, digest.Length);
-                    buffer.Write(engineId, 0, engineId.Length);
-                    buffer.Write(digest, 0, digest.Length);
-                    return md5.ComputeHash(buffer.ToArray());
-                }
+            var digest = md5.HashData(sourceBuffer);
+            using (var buffer = new MemoryStream())
+            {
+                buffer.Write(digest, 0, digest.Length);
+                buffer.Write(engineId, 0, engineId.Length);
+                buffer.Write(digest, 0, digest.Length);
+                return md5.HashData(buffer.ToArray());
             }
         }
 
@@ -169,14 +166,12 @@ namespace Lextm.SharpSnmpLib.Security
             }
 
             var key = PasswordToKey(_password, parameters.EngineId.GetRaw());
-            using (var md5 = new HMACMD5(key))
-            {
-                var hash = md5.ComputeHash(ByteTool.PackMessage(length, version, header, parameters, data).ToBytes());
-                md5.Clear();
-                var result = new byte[DigestLength];
-                Buffer.BlockCopy(hash, 0, result, 0, result.Length);
-                return new OctetString(result);
-            }
+            var md5 = WinRTCrypto.MacAlgorithmProvider.OpenAlgorithm(MacAlgorithm.HmacMd5);
+            var hash = md5.CreateHash(key);
+            hash.Append(ByteTool.PackMessage(length, version, header, parameters, data).ToBytes());
+            var result = new byte[DigestLength];
+            Buffer.BlockCopy(hash.GetValueAndReset(), 0, result, 0, result.Length);
+            return new OctetString(result);
         }
 
         #endregion
@@ -193,4 +188,3 @@ namespace Lextm.SharpSnmpLib.Security
         }
     }
 }
-#endif

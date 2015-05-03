@@ -176,9 +176,6 @@
     <Compile Include="Pipeline\Version3MembershipProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\AESPrivacyProvider.cs" />
-    <Compile Include="Security\DESPrivacyProvider.cs" />
-    <Compile Include="Security\MD5AuthenticationProvider.cs" />
-    <Compile Include="Security\SHA1AuthenticationProvider.cs" />
     <None Include="sharpsnmplib.snk" />
   </ItemGroup>
   <ItemGroup>
