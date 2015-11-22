@@ -1,0 +1,34 @@
+﻿{
+    "authors": [ "Malcolm Crowe", "Lex Li", "other contributors" ],
+    "copyright": "All rights reserved. (c) 2008-2016 Malcolm Crowe, Lex Li, and other contributors.",
+    "description": "#SNMP (SharpSNMP) Library is an open source library for developers who target Microsoft .NET/Xamarin/Mono platforms. It's developed in C# and can be used for F#, VB.NET, Oxygene, and more.",
+    "frameworks": {
+        "dotnet5.4": {
+            "dependencies": {
+                "Microsoft.CSharp": "4.0.1-beta-23516",
+                "System.Collections": "4.0.11-beta-*",
+                "System.ComponentModel.TypeConverter": "4.0.1-beta-*",
+                "System.Diagnostics.Tools": "4.0.1-beta-*",
+                "System.Linq": "4.0.1-beta-*",
+                "System.Net.NetworkInformation": "4.1.0-beta-*",
+                "System.Net.Primitives": "4.0.11-beta-*",
+                "System.Net.Sockets": "4.1.0-beta-*",
+                "System.Security.Cryptography.Algorithms": "4.0.0-beta-*",
+                "System.Reflection.Primitives": "4.0.1-beta-*",
+                "System.Runtime": "4.0.21-beta-*",
+                "System.Runtime.Serialization.Primitives": "4.1.0-beta-*",
+                "System.Threading": "4.0.11-beta-*"
+            }
+        }
+    },
+    "language": "en-US",
+    "licenseUrl": "http://opensource.org/licenses/MIT",
+    "owners": [ "Lex Li" ],
+    "projectUrl": "http://sharpsnmplib.codeplex.com/",
+    "releaseNotes": "http://sharpsnmplib.codeplex.com/releases/view/116908",
+    "requireLicenseAcceptance": true,
+    "summary": "#SNMP open source SNMP library for .NET/Mono/Xamarin.",
+    "tags": [ "snmp", "udp", "networking" ],
+    "title": "#SNMP Library",
+    "version": "9.4.0-alpha1"
+}

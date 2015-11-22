@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using Lextm.SharpSnmpLib.Messaging;
+using System.Threading.Tasks;
 
 namespace Lextm.SharpSnmpLib.Pipeline
 {
@@ -81,7 +82,7 @@ namespace Lextm.SharpSnmpLib.Pipeline
         /// <summary>
         /// Sends out response message.
         /// </summary>
-        void SendResponse();
+        Task SendResponseAsync();
 
         /// <summary>
         /// Handles the membership authentication.

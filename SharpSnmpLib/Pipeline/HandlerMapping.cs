@@ -21,6 +21,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Lextm.SharpSnmpLib.Messaging;
+using System.Reflection;
 
 namespace Lextm.SharpSnmpLib.Pipeline
 {
@@ -110,15 +111,14 @@ namespace Lextm.SharpSnmpLib.Pipeline
 
         private static IMessageHandler CreateMessageHandler(string assemblyName, string type)
         {
-            foreach (var assembly in from assembly in AppDomain.CurrentDomain.GetAssemblies()
-                                          let name = assembly.GetName().Name
-                                          where string.Compare(name, assemblyName, StringComparison.OrdinalIgnoreCase) == 0
-                                          select assembly)
+            var assembly = typeof(HandlerMapping).GetTypeInfo().Assembly;
+            if (assembly.GetName().Name == assemblyName)
             {
                 return (IMessageHandler)Activator.CreateInstance(assembly.GetType(type));
             }
 
-            return (IMessageHandler)Activator.CreateInstance(AppDomain.CurrentDomain.Load(assemblyName).GetType(type));
+            // TODO: how to load types from other assemblies.
+            return null;
         }
         #endif
         

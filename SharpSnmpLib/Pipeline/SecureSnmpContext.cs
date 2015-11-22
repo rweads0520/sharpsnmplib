@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net;
@@ -205,24 +204,9 @@ namespace Lextm.SharpSnmpLib.Pipeline
             return true;
         }
 
-        private static bool? _timeIncluded;
-
         private static bool TimeIncluded
         {
-            get
-            {
-                if (_timeIncluded == null)
-                {
-#if MA || CF || MT || __IOS__
-                    _timeIncluded = true;
-#else
-                    object setting = ConfigurationManager.AppSettings["TimeIncluded"];
-                    _timeIncluded = setting != null && Convert.ToBoolean(setting.ToString(), CultureInfo.InvariantCulture);
-#endif
-                }
-
-                return _timeIncluded.Value;
-            }
+            get { return true; }
         }
 
         private void HandleDiscovery()

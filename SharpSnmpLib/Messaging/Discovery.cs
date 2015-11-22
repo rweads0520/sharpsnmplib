@@ -34,6 +34,8 @@ using Lextm.SharpSnmpLib.Security;
 
 namespace Lextm.SharpSnmpLib.Messaging
 {
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Discovery class that participates in SNMP v3 discovery process.
     /// </summary>
@@ -182,10 +184,9 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <summary>
         /// Gets the response.
         /// </summary>
-        /// <param name="timeout">The time-out value, in milliseconds. The default value is 0, which indicates an infinite time-out period. Specifying -1 also indicates an infinite time-out period.</param>
         /// <param name="receiver">The receiver.</param>
         /// <returns></returns>
-        public ReportMessage GetResponse(int timeout, IPEndPoint receiver)
+        public async Task<ReportMessage> GetResponseAsync(IPEndPoint receiver)
         {
             if (receiver == null)
             {
@@ -194,7 +195,7 @@ namespace Lextm.SharpSnmpLib.Messaging
 
             using (var socket = receiver.GetSocket())
             {
-                return (ReportMessage)_discovery.GetResponse(timeout, receiver, Empty, socket);
+                return (ReportMessage)await _discovery.GetResponseAsync(receiver, Empty, socket);
             }
         }
 

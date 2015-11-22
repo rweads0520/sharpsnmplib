@@ -117,7 +117,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// A <see cref="ISnmpMessage"/>.
         /// </param>
         /// <param name="receiver">Receiver.</param>
-        public void SendResponse(ISnmpMessage response, EndPoint receiver)
+        public async Task SendResponseAsync(ISnmpMessage response, EndPoint receiver)
         {
             if (_disposed)
             {
@@ -145,9 +145,14 @@ namespace Lextm.SharpSnmpLib.Messaging
             }
 
             var buffer = response.ToBytes();
+            var info = new SocketAsyncEventArgs();
+
             try
             {
-                _socket.SendTo(buffer, 0, buffer.Length, 0, receiver);
+                info.RemoteEndPoint = receiver;
+                info.SetBuffer(buffer, 0, buffer.Length);
+                var awaitable1 = new SocketAwaitable(info);
+                await _socket.SendToAsync(awaitable1);
             }
             catch (SocketException ex)
             {
@@ -156,6 +161,10 @@ namespace Lextm.SharpSnmpLib.Messaging
                     // IMPORTANT: interrupted means the socket is closed.
                     throw;
                 }
+            }
+            finally
+            {
+                info.Dispose();
             }
         }
 
@@ -195,11 +204,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                 return;
             }
 
-#if CF
             _socket = new Socket(addressFamily, SocketType.Dgram, ProtocolType.Udp);
-#else
-            _socket = new Socket(addressFamily, SocketType.Dgram, ProtocolType.Udp) { ExclusiveAddressUse = true };
-#endif
 
             try
             {
@@ -225,7 +230,7 @@ namespace Lextm.SharpSnmpLib.Messaging
 #if ASYNC
             Task.Factory.StartNew(() => AsyncBeginReceive());
 #else
-            Task.Factory.StartNew(() => AsyncReceive());
+            Task.Factory.StartNew(() => ReceiveAsync());
 #endif
         }
 
@@ -327,8 +332,9 @@ namespace Lextm.SharpSnmpLib.Messaging
             }
         }
 #else
-        private void AsyncReceive()
+        private async Task ReceiveAsync()
         {
+            EndPoint remote = _socket.AddressFamily == AddressFamily.InterNetwork ? new IPEndPoint(IPAddress.Any, 0) : new IPEndPoint(IPAddress.IPv6Any, 0);
             while (true)
             {
                 // If no more active, then stop.
@@ -337,13 +343,16 @@ namespace Lextm.SharpSnmpLib.Messaging
                     return;
                 }
 
+                int count;
+                var reply = new byte[_bufferSize];
+                var args = new SocketAsyncEventArgs();
                 try
                 {
-                    var buffer = new byte[_bufferSize];
-                    EndPoint remote = _socket.AddressFamily == AddressFamily.InterNetwork ? new IPEndPoint(IPAddress.Any, 0) : new IPEndPoint(IPAddress.IPv6Any, 0);
-
-                    var count = _socket.ReceiveFrom(buffer, ref remote);
-                    Task.Factory.StartNew(() => HandleMessage(buffer, count, (IPEndPoint)remote));
+                    args.RemoteEndPoint = remote;
+                    args.SetBuffer(reply, 0, _bufferSize);
+                    var awaitable = new SocketAwaitable(args);
+                    count = await _socket.ReceiveAsync(awaitable);
+                    await Task.Factory.StartNew(() => HandleMessage(reply, count, (IPEndPoint)remote));
                 }
                 catch (SocketException ex)
                 {

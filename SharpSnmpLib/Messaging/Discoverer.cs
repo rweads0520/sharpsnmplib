@@ -60,7 +60,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <param name="community">The community.</param>
         /// <param name="interval">The discovering time interval, in milliseconds.</param>
         /// <remarks><paramref name="broadcastAddress"/> must be an IPv4 address. IPv6 is not yet supported here.</remarks>
-        public void Discover(VersionCode version, IPEndPoint broadcastAddress, OctetString community, int interval)
+        public async Task DiscoverAsync(VersionCode version, IPEndPoint broadcastAddress, OctetString community, int interval)
         {
             if (broadcastAddress == null)
             {
@@ -92,13 +92,16 @@ namespace Lextm.SharpSnmpLib.Messaging
                 bytes = message.ToBytes();
             }
 
-            using (var udp = new UdpClient(addressFamily))
+            using (var udp = new Socket(addressFamily, SocketType.Dgram, ProtocolType.Udp))
             {
-                #if (!CF)
-                udp.EnableBroadcast = true;
-                #endif
-                udp.Send(bytes, bytes.Length, broadcastAddress);
-
+                using (var info = new SocketAsyncEventArgs())
+                {
+                    info.RemoteEndPoint = broadcastAddress;
+                    info.SetBuffer(bytes, 0, bytes.Length);
+                    var awaitable1 = new SocketAwaitable(info);
+                    await udp.SendToAsync(awaitable1);
+                }
+                
                 var activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
                 if (activeBefore == Active)
                 {
@@ -109,18 +112,18 @@ namespace Lextm.SharpSnmpLib.Messaging
                 #if CF
                 _bufferSize = 8192;
                 #else
-                _bufferSize = udp.Client.ReceiveBufferSize;
+                _bufferSize = udp.ReceiveBufferSize;
                 #endif
 
                 #if ASYNC
-                Task.Factory.StartNew(() => AsyncBeginReceive(udp.Client));
+                await Task.Factory.StartNew(() => AsyncBeginReceive(udp));
                 #else
-                Task.Factory.StartNew(() => AsyncReceive(udp.Client));
+                await Task.Factory.StartNew(() => ReceiveAsync(udp));
                 #endif
 
-                Thread.Sleep(interval);
+                await Task.Delay(interval);
                 Interlocked.CompareExchange(ref _active, Inactive, Active);
-                udp.Close();
+                udp.Dispose();
             }
         }
 
@@ -202,8 +205,9 @@ namespace Lextm.SharpSnmpLib.Messaging
         }
 #else
 
-        private void AsyncReceive(Socket socket)
+        private async Task ReceiveAsync(Socket socket)
         {
+            EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
             while (true)
             {
                 // If no more active, then stop.
@@ -212,12 +216,16 @@ namespace Lextm.SharpSnmpLib.Messaging
                     return;
                 }
 
+                int count;
+                var reply = new byte[_bufferSize];
+                var args = new SocketAsyncEventArgs();
                 try
                 {
-                    var buffer = new byte[_bufferSize];
-                    EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
-                    var count = socket.ReceiveFrom(buffer, ref remote);
-                    Task.Factory.StartNew(()=> HandleMessage(buffer, count, (IPEndPoint)remote));
+                    args.RemoteEndPoint = remote;
+                    args.SetBuffer(reply, 0, _bufferSize);
+                    var awaitable = new SocketAwaitable(args);
+                    count = await socket.ReceiveAsync(awaitable);
+                    await Task.Factory.StartNew(()=> HandleMessage(reply, count, (IPEndPoint)remote));
                 }
                 catch (SocketException ex)
                 {
@@ -231,6 +239,10 @@ namespace Lextm.SharpSnmpLib.Messaging
                             HandleException(ex);
                         }
                     }
+                }
+                finally
+                {
+                    args.Dispose();
                 }
             }
         }

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Net;
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
+using System.Threading.Tasks;
 
 namespace Lextm.SharpSnmpLib.Pipeline
 {
@@ -106,14 +107,14 @@ namespace Lextm.SharpSnmpLib.Pipeline
         /// <summary>
         /// Sends out response message.
         /// </summary>
-        public void SendResponse()
+        public async Task SendResponseAsync()
         {
             if (Response == null)
             {
                 return;
             }
 
-            Binding.SendResponse(Response, Sender);
+            await Binding.SendResponseAsync(Response, Sender);
         }
 
         /// <summary>

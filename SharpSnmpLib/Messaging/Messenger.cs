@@ -34,6 +34,9 @@ using Lextm.SharpSnmpLib.Security;
 
 namespace Lextm.SharpSnmpLib.Messaging
 {
+    using System.Runtime.InteropServices;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Messenger class contains all static helper methods you need to send out SNMP messages.
     /// Static methods in Manager or Agent class will be removed in the future.
@@ -68,9 +71,8 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <param name="endpoint">Endpoint.</param>
         /// <param name="community">Community name.</param>
         /// <param name="variables">Variable binds.</param>
-        /// <param name="timeout">The time-out value, in milliseconds. The default value is 0, which indicates an infinite time-out period. Specifying -1 also indicates an infinite time-out period.</param>
         /// <returns></returns>
-        public static IList<Variable> Get(VersionCode version, IPEndPoint endpoint, OctetString community, IList<Variable> variables, int timeout)
+        public static async Task<IList<Variable>> GetAsync(VersionCode version, IPEndPoint endpoint, OctetString community, IList<Variable> variables)
         {
             if (endpoint == null)
             {
@@ -93,7 +95,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             }
 
             var message = new GetRequestMessage(RequestCounter.NextId, version, community, variables);
-            var response = message.GetResponse(timeout, endpoint);
+            var response = await message.GetResponseAsync(endpoint);
             var pdu = response.Pdu();
             if (pdu.ErrorStatus.ToInt32() != 0)
             {
@@ -113,9 +115,8 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <param name="endpoint">Endpoint.</param>
         /// <param name="community">Community name.</param>
         /// <param name="variables">Variable binds.</param>
-        /// <param name="timeout">The time-out value, in milliseconds. The default value is 0, which indicates an infinite time-out period. Specifying -1 also indicates an infinite time-out period.</param>
         /// <returns></returns>
-        public static IList<Variable> Set(VersionCode version, IPEndPoint endpoint, OctetString community, IList<Variable> variables, int timeout)
+        public static async Task<IList<Variable>> Set(VersionCode version, IPEndPoint endpoint, OctetString community, IList<Variable> variables)
         {
             if (endpoint == null)
             {
@@ -138,7 +139,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             }
 
             var message = new SetRequestMessage(RequestCounter.NextId, version, community, variables);
-            var response = message.GetResponse(timeout, endpoint);
+            var response = await message.GetResponseAsync(endpoint);
             var pdu = response.Pdu();
             if (pdu.ErrorStatus.ToInt32() != 0)
             {
@@ -164,7 +165,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <returns>
         /// Returns row count if the OID is a table. Otherwise this value is meaningless.
         /// </returns>
-        public static int Walk(VersionCode version, IPEndPoint endpoint, OctetString community, ObjectIdentifier table, IList<Variable> list, int timeout, WalkMode mode)
+        public static async Task<int> WalkAsync(VersionCode version, IPEndPoint endpoint, OctetString community, ObjectIdentifier table, IList<Variable> list, int timeout, WalkMode mode)
         {
             if (list == null)
             {
@@ -177,11 +178,13 @@ namespace Lextm.SharpSnmpLib.Messaging
             var next = tableV;
             var rowMask = string.Format(CultureInfo.InvariantCulture, "{0}.1.1.", table);
             var subTreeMask = string.Format(CultureInfo.InvariantCulture, "{0}.", table);
+            Tuple<bool, Variable> data = new Tuple<bool, Variable>(false, next);
             do
             {
-                seed = next;
+                seed = data.Item2;
                 if (seed == tableV)
                 {
+                    data = await HasNextAsync(version, endpoint, community, seed);
                     continue;
                 }
 
@@ -196,8 +199,10 @@ namespace Lextm.SharpSnmpLib.Messaging
                 {
                     result++;
                 }
+
+                data = await HasNextAsync(version, endpoint, community, seed);
             }
-            while (HasNext(version, endpoint, community, seed, timeout, out next));
+            while (data.Item1);
             return result;
         }
 
@@ -214,7 +219,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         ///     <c>true</c> if the specified seed has next item; otherwise, <c>false</c>.
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "5#")]
-        private static bool HasNext(VersionCode version, IPEndPoint endpoint, OctetString community, Variable seed, int timeout, out Variable next)
+        private static async Task<Tuple<bool, Variable>> HasNextAsync(VersionCode version, IPEndPoint endpoint, OctetString community, Variable seed)
         {
             if (seed == null)
             {
@@ -228,11 +233,10 @@ namespace Lextm.SharpSnmpLib.Messaging
                 community,
                 variables);
 
-            var response = message.GetResponse(timeout, endpoint);
+            var response = await message.GetResponseAsync(endpoint);
             var pdu = response.Pdu();
             var errorFound = pdu.ErrorStatus.ToErrorCode() == ErrorCode.NoSuchName;
-            next = errorFound ? null : pdu.Variables[0];
-            return !errorFound;
+            return new Tuple<bool, Variable>(!errorFound, errorFound ? null : pdu.Variables[0]);
         }
 
         /// <summary>
@@ -249,7 +253,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <param name="privacy">The privacy provider.</param>
         /// <param name="report">The report.</param>
         /// <returns></returns>
-        public static int BulkWalk(VersionCode version, IPEndPoint endpoint, OctetString community, ObjectIdentifier table, IList<Variable> list, int timeout, int maxRepetitions, WalkMode mode, IPrivacyProvider privacy, ISnmpMessage report)
+        public static async Task<int> BulkWalk(VersionCode version, IPEndPoint endpoint, OctetString community, ObjectIdentifier table, IList<Variable> list, int timeout, int maxRepetitions, WalkMode mode, IPrivacyProvider privacy, ISnmpMessage report)
         {
             if (list == null)
             {
@@ -261,7 +265,10 @@ namespace Lextm.SharpSnmpLib.Messaging
             IList<Variable> next;
             var result = 0;
             var message = report;
-            while (BulkHasNext(version, endpoint, community, seed, timeout, maxRepetitions, out next, privacy, ref message))
+            var data = await BulkHasNextAsync(version, endpoint, community, seed, maxRepetitions, privacy, message);
+            next = data.Item2;
+            message = data.Item3;
+            while (data.Item1)
             {
                 var subTreeMask = string.Format(CultureInfo.InvariantCulture, "{0}.", table);
                 var rowMask = string.Format(CultureInfo.InvariantCulture, "{0}.1.1.", table);
@@ -287,6 +294,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                 }
 
                 seed = next[next.Count - 1];
+                data = await BulkHasNextAsync(version, endpoint, community, seed, maxRepetitions, privacy, message);
             }
 
         end:
@@ -305,10 +313,10 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <param name="timestamp">Timestamp.</param>
         /// <param name="variables">Variable bindings.</param>
         [CLSCompliant(false)]
-        public static void SendTrapV1(EndPoint receiver, IPAddress agent, OctetString community, ObjectIdentifier enterprise, GenericCode generic, int specific, uint timestamp, IList<Variable> variables)
+        public static async Task SendTrapV1Async(EndPoint receiver, IPAddress agent, OctetString community, ObjectIdentifier enterprise, GenericCode generic, int specific, uint timestamp, IList<Variable> variables)
         {
             var message = new TrapV1Message(VersionCode.V1, agent, community, enterprise, generic, specific, timestamp, variables);
-            message.Send(receiver);
+            await message.SendAsync(receiver);
         }
 
         /// <summary>
@@ -322,7 +330,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <param name="variables">Variable bindings.</param>
         /// <param name="requestId">Request ID.</param>
         [CLSCompliant(false)]
-        public static void SendTrapV2(int requestId, VersionCode version, EndPoint receiver, OctetString community, ObjectIdentifier enterprise, uint timestamp, IList<Variable> variables)
+        public static async Task SendTrapV2Async(int requestId, VersionCode version, EndPoint receiver, OctetString community, ObjectIdentifier enterprise, uint timestamp, IList<Variable> variables)
         {
             if (version != VersionCode.V2)
             {
@@ -330,7 +338,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             }
 
             var message = new TrapV2Message(requestId, version, community, enterprise, timestamp, variables);
-            message.Send(receiver);
+            await message.SendAsync(receiver);
         }
 
         /// <summary>
@@ -347,7 +355,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <param name="privacy">The privacy provider.</param>
         /// <param name="report">The report.</param>
         [CLSCompliant(false)]
-        public static void SendInform(int requestId, VersionCode version, IPEndPoint receiver, OctetString community, ObjectIdentifier enterprise, uint timestamp, IList<Variable> variables, int timeout, IPrivacyProvider privacy, ISnmpMessage report)
+        public static async Task SendInformAsync(int requestId, VersionCode version, IPEndPoint receiver, OctetString community, ObjectIdentifier enterprise, uint timestamp, IList<Variable> variables, IPrivacyProvider privacy, ISnmpMessage report)
         {
             if (receiver == null)
             {
@@ -399,7 +407,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                                           timestamp,
                                           variables);
 
-            var response = message.GetResponse(timeout, receiver);
+            var response = await message.GetResponseAsync(receiver);
             if (response.Pdu().ErrorStatus.ToInt32() != 0)
             {
                 throw ErrorException.Create(
@@ -407,51 +415,6 @@ namespace Lextm.SharpSnmpLib.Messaging
                     receiver.Address,
                     response);
             }
-        }
-
-        /// <summary>
-        /// Gets a table of variables.
-        /// </summary>
-        /// <param name="version">Protocol version.</param>
-        /// <param name="endpoint">Endpoint.</param>
-        /// <param name="community">Community name.</param>
-        /// <param name="table">Table OID.</param>
-        /// <param name="timeout">The time-out value, in milliseconds. The default value is 0, which indicates an infinite time-out period. Specifying -1 also indicates an infinite time-out period.</param>
-        /// <param name="maxRepetitions">The max repetitions.</param>
-        /// <returns></returns>
-        [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "Return", Justification = "ByDesign")]
-        [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", MessageId = "Body", Justification = "ByDesign")]
-        [CLSCompliant(false)]
-        [Obsolete("This method only works for a few scenarios. Will provide new methods in the future. If it does not work for you, parse WALK result on your own.")]
-        public static Variable[,] GetTable(VersionCode version, IPEndPoint endpoint, OctetString community, ObjectIdentifier table, int timeout, int maxRepetitions)
-        {
-            if (version == VersionCode.V3)
-            {
-                throw new NotSupportedException("SNMP v3 is not supported");
-            }
-
-            IList<Variable> list = new List<Variable>();
-            var rows = version == VersionCode.V1 ? Walk(version, endpoint, community, table, list, timeout, WalkMode.WithinSubtree) : BulkWalk(version, endpoint, community, table, list, timeout, maxRepetitions, WalkMode.WithinSubtree, null, null);
-
-            if (rows == 0)
-            {
-                return new Variable[0, 0];
-            }
-
-            var cols = list.Count / rows;
-            var k = 0;
-            var result = new Variable[rows, cols];
-
-            for (var j = 0; j < cols; j++)
-            {
-                for (var i = 0; i < rows; i++)
-                {
-                    result[i, j] = list[k];
-                    k++;
-                }
-            }
-
-            return result;
         }
 
         /// <summary>
@@ -604,8 +567,9 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <c>true</c> if the specified seed has next item; otherwise, <c>false</c>.
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "5#")]
-        private static bool BulkHasNext(VersionCode version, IPEndPoint receiver, OctetString community, Variable seed, int timeout, int maxRepetitions, out IList<Variable> next, IPrivacyProvider privacy, ref ISnmpMessage report)
+        private static async Task<Tuple<bool, IList<Variable>, ISnmpMessage>> BulkHasNextAsync(VersionCode version, IPEndPoint receiver, OctetString community, Variable seed, int maxRepetitions, IPrivacyProvider privacy, ISnmpMessage report)
         {
+            // TODO: report should be updated with latest message from agent.
             if (version == VersionCode.V1)
             {
                 throw new ArgumentException("v1 is not supported", "version");
@@ -631,14 +595,13 @@ namespace Lextm.SharpSnmpLib.Messaging
                                                       0,
                                                       maxRepetitions,
                                                       variables);
-            var reply = request.GetResponse(timeout, receiver);
+            var reply = await request.GetResponseAsync(receiver);
             if (reply is ReportMessage)
             {
                 if (reply.Pdu().Variables.Count == 0)
                 {
                     // TODO: whether it is good to return?
-                    next = new List<Variable>(0);
-                    return false;
+                    return new Tuple<bool, IList<Variable>, ISnmpMessage>(false, new List<Variable>(0), report);
                 }
 
                 var id = reply.Pdu().Variables[0].Id;
@@ -646,8 +609,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                 {
                     // var error = id.GetErrorMessage();
                     // TODO: whether it is good to return?
-                    next = new List<Variable>(0);
-                    return false;
+                    return new Tuple<bool, IList<Variable>, ISnmpMessage>(false, new List<Variable>(0), report);
                 }
 
                 // according to RFC 3414, send a second request to sync time.
@@ -662,7 +624,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                     privacy,
                     MaxMessageSize,
                     reply);
-                reply = request.GetResponse(timeout, receiver);
+                reply = await request.GetResponseAsync(receiver);
             }
             else if (reply.Pdu().ErrorStatus.ToInt32() != 0)
             {
@@ -672,9 +634,8 @@ namespace Lextm.SharpSnmpLib.Messaging
                     reply);
             }
 
-            next = reply.Pdu().Variables;
-            report = request;
-            return next.Count != 0;
+            var next = reply.Pdu().Variables;
+            return new Tuple<bool, IList<Variable>, ISnmpMessage>(next.Count != 0, next, request);
         }
 
         /// <summary>

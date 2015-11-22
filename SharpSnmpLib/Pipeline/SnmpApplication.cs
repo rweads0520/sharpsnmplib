@@ -17,6 +17,8 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+using System.Threading.Tasks;
+
 namespace Lextm.SharpSnmpLib.Pipeline
 {
     /// <summary>
@@ -74,14 +76,14 @@ namespace Lextm.SharpSnmpLib.Pipeline
         /// <summary>
         /// Processes an incoming request.
         /// </summary>
-        public void Process()
+        public async Task Process()
         {
             OnAuthenticateRequest();
             
             // TODO: add authorization.
             OnMapRequestHandler();
             OnRequestHandlerExecute();
-            OnLogRequest();
+            await OnLogRequest();
             _owner.Reuse(this);
         }
 
@@ -123,11 +125,11 @@ namespace Lextm.SharpSnmpLib.Pipeline
             {
                 CompleteProcessing();
             }
-        }        
+        }
 
-        private void OnLogRequest()
+        private async Task OnLogRequest()
         {
-            Context.SendResponse();
+            await Context.SendResponseAsync();
             if (_logger == null)
             {
                 return;

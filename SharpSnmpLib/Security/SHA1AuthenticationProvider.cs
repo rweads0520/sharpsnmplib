@@ -94,7 +94,7 @@ namespace Lextm.SharpSnmpLib.Security
 
         private byte[] _PasswordToKey(byte[] password, byte[] engineId)
         {          
-            using (SHA1 sha = new SHA1CryptoServiceProvider())
+            using (SHA1 sha = SHA1.Create())
             {
                 var passwordIndex = 0;
                 var count = 0;
@@ -171,7 +171,6 @@ namespace Lextm.SharpSnmpLib.Security
             using (var sha1 = new HMACSHA1(key))
             {
                 var hash = sha1.ComputeHash(ByteTool.PackMessage(length, version, header, parameters, data).ToBytes());
-                sha1.Clear();
                 var result = new byte[DigestLength];
                 Buffer.BlockCopy(hash, 0, result, 0, result.Length);
                 return new OctetString(result);

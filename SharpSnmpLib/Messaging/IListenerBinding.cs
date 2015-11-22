@@ -18,6 +18,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Lextm.SharpSnmpLib.Messaging
 {
@@ -33,7 +34,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// A <see cref="ISnmpMessage"/>.
         /// </param>
         /// <param name="receiver">Receiver.</param>
-        void SendResponse(ISnmpMessage response, EndPoint receiver);
+        Task SendResponseAsync(ISnmpMessage response, EndPoint receiver);
 
         /// <summary>
         /// Endpoint.
