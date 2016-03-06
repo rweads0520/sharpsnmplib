@@ -101,7 +101,7 @@ namespace Lextm.SharpSnmpLib
         /// </summary>
         /// <param name="varbindSection"></param>
         /// <returns></returns>
-        internal static IList<Variable> Transform(Sequence varbindSection)
+        public static IList<Variable> Transform(Sequence varbindSection)
         {
             if (varbindSection == null)
             {
@@ -138,7 +138,7 @@ namespace Lextm.SharpSnmpLib
         /// </summary>
         /// <param name="variables"></param>
         /// <returns></returns>
-        internal static Sequence Transform(IList<Variable> variables)
+        public static Sequence Transform(IList<Variable> variables)
         {
             // TODO: use IEnumerable instead of IList.
             if (variables == null)

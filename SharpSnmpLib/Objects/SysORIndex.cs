@@ -22,7 +22,7 @@ using Lextm.SharpSnmpLib.Pipeline;
 namespace Lextm.SharpSnmpLib.Objects
 {
     // TODO: this is not accessible. So how to handle?
-    internal sealed class SysORIndex : ScalarObject
+    public sealed class SysORIndex : ScalarObject
     {
         private readonly ISnmpData _data;
 

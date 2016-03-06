@@ -26,7 +26,7 @@ namespace Lextm.SharpSnmpLib.Pipeline
     /// <summary>
     /// SNMP context factory.
     /// </summary>
-    internal static class SnmpContextFactory
+    public static class SnmpContextFactory
     {
         /// <summary>
         /// Creates the specified request.

@@ -246,7 +246,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// <param name="version">The version.</param>
         /// <param name="data">The data.</param>
         /// <returns></returns>
-        internal static Sequence PackMessage(VersionCode version, params ISnmpData[] data)
+        public static Sequence PackMessage(VersionCode version, params ISnmpData[] data)
         {
             if (data == null)
             {

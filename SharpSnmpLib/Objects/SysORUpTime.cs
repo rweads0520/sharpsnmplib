@@ -21,7 +21,7 @@ using Lextm.SharpSnmpLib.Pipeline;
 
 namespace Lextm.SharpSnmpLib.Objects
 {
-    internal sealed class SysORUpTime : ScalarObject
+    public sealed class SysORUpTime : ScalarObject
     {
         private readonly TimeTicks _data;
 
