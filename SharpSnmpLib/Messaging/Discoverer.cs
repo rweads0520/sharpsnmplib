@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -66,7 +65,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             {
                 throw new ArgumentNullException("broadcastAddress");
             }
-            
+
             if (version != VersionCode.V3 && community == null)
             {
                 throw new ArgumentNullException("community");
@@ -101,7 +100,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                     var awaitable1 = new SocketAwaitable(info);
                     await udp.SendToAsync(awaitable1);
                 }
-                
+
                 var activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
                 if (activeBefore == Active)
                 {
@@ -109,101 +108,13 @@ namespace Lextm.SharpSnmpLib.Messaging
                     return;
                 }
 
-                #if CF
-                _bufferSize = 8192;
-                #else
                 _bufferSize = udp.ReceiveBufferSize;
-                #endif
-
-                #if ASYNC
-                await Task.Factory.StartNew(() => AsyncBeginReceive(udp));
-                #else
-                await Task.Factory.StartNew(() => ReceiveAsync(udp));
-                #endif
-
-                await Task.Delay(interval);
+                await ReceiveAsync(udp).ConfigureAwait(false);
+                await Task.Delay(interval).ConfigureAwait(false);
                 Interlocked.CompareExchange(ref _active, Inactive, Active);
-                udp.Dispose();
+                udp.Shutdown(SocketShutdown.Both);
             }
         }
-
-#if ASYNC
-        private void AsyncBeginReceive(Socket socket)
-        {
-            while (true)
-            {
-                // If no more active, then stop.
-                if (Interlocked.Exchange(ref _active, _active) == Inactive)
-                {
-                    return;
-                }
-
-                byte[] buffer = new byte[_bufferSize];
-                EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
-                IAsyncResult iar = null;
-                try
-                {
-                    iar = socket.BeginReceiveFrom(buffer, 0, _bufferSize, SocketFlags.None, ref remote, AsyncEndReceive, new Tuple<Socket, byte[]>(socket, buffer));
-                }
-                catch (SocketException ex)
-                {
-                    // ignore WSAECONNRESET, http://bytes.com/topic/c-sharp/answers/237558-strange-udp-socket-problem
-                    if (ex.SocketErrorCode != SocketError.ConnectionReset)
-                    {
-                        // If the SnmpTrapListener was active, marks it as stopped and call HandleException.
-                        // If it was inactive, the exception is likely to result from this, and we raise nothing.
-                        long activeBefore = Interlocked.CompareExchange(ref _active, Inactive, Active);
-                        if (activeBefore == Active)
-                        {
-                            HandleException(ex);
-                        }
-                    }
-                }
-
-                if (iar != null)
-                {
-                    iar.AsyncWaitHandle.WaitOne();
-                }
-            }
-        }
-
-        private void AsyncEndReceive(IAsyncResult iar)
-        {
-            // If no more active, then stop. This discards the received packet, if any (indeed, we may be there either
-            // because we've received a packet, or because the socket has been closed).
-            if (Interlocked.Exchange(ref _active, _active) == Inactive)
-            {
-                return;
-            }
-
-            //// We start another receive operation.
-            //AsyncBeginReceive();
-
-            Tuple<Socket, byte[]> data = (Tuple<Socket, byte[]>)iar.AsyncState;
-            byte[] buffer = data.Item2;
-
-            try
-            {
-                EndPoint remote = data.Item1.AddressFamily == AddressFamily.InterNetwork ? new IPEndPoint(IPAddress.Any, 0) : new IPEndPoint(IPAddress.IPv6Any, 0);
-                int count = data.Item1.EndReceiveFrom(iar, ref remote);
-                HandleMessage(buffer, count, (IPEndPoint)remote);
-            }
-            catch (SocketException ex)
-            {
-                // ignore WSAECONNRESET, http://bytes.com/topic/c-sharp/answers/237558-strange-udp-socket-problem
-                if (ex.SocketErrorCode != SocketError.ConnectionReset)
-                {
-                    // If the SnmpTrapListener was active, marks it as stopped and call HandleException.
-                    // If it was inactive, the exception is likely to result from this, and we raise nothing.
-                    long activeBefore = Interlocked.CompareExchange(ref _active, Inactive, Active);
-                    if (activeBefore == Active)
-                    {
-                        HandleException(ex);
-                    }
-                }
-            }
-        }
-#else
 
         private async Task ReceiveAsync(Socket socket)
         {
@@ -225,7 +136,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                     args.SetBuffer(reply, 0, _bufferSize);
                     var awaitable = new SocketAwaitable(args);
                     count = await socket.ReceiveAsync(awaitable);
-                    await Task.Factory.StartNew(()=> HandleMessage(reply, count, (IPEndPoint)remote));
+                    await Task.Factory.StartNew(() => HandleMessage(reply, count, (IPEndPoint)remote)).ConfigureAwait(false);
                 }
                 catch (SocketException ex)
                 {
@@ -246,7 +157,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                 }
             }
         }
-#endif
+
         private void HandleException(Exception exception)
         {
             var handler = ExceptionRaised;
@@ -257,7 +168,6 @@ namespace Lextm.SharpSnmpLib.Messaging
 
             handler(this, new ExceptionRaisedEventArgs(exception));
         }
-
 
         private void HandleMessage(byte[] buffer, int count, IPEndPoint remote)
         {

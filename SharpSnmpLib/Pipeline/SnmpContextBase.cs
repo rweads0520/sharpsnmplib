@@ -114,7 +114,7 @@ namespace Lextm.SharpSnmpLib.Pipeline
                 return;
             }
 
-            await Binding.SendResponseAsync(Response, Sender);
+            await Binding.SendResponseAsync(Response, Sender).ConfigureAwait(false);
         }
 
         /// <summary>

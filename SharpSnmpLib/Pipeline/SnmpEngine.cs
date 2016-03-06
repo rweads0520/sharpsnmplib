@@ -103,17 +103,10 @@ namespace Lextm.SharpSnmpLib.Pipeline
 
         private async void ListenerMessageReceived(object sender, MessageReceivedEventArgs e)
         {
-#if DEBUG
-            var watch = new Stopwatch();
-            watch.Start();
-#endif
             var request = e.Message;
             var context = SnmpContextFactory.Create(request, e.Sender, Listener.Users, _group, e.Binding);
             var application = _factory.Create(context);
-            await application.Process();
-#if DEBUG
-            watch.Stop();
-#endif
+            await application.Process().ConfigureAwait(false);
         }
 
         /// <summary>

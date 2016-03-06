@@ -95,7 +95,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             }
 
             var message = new GetRequestMessage(RequestCounter.NextId, version, community, variables);
-            var response = await message.GetResponseAsync(endpoint);
+            var response = await message.GetResponseAsync(endpoint).ConfigureAwait(false);
             var pdu = response.Pdu();
             if (pdu.ErrorStatus.ToInt32() != 0)
             {
@@ -139,7 +139,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             }
 
             var message = new SetRequestMessage(RequestCounter.NextId, version, community, variables);
-            var response = await message.GetResponseAsync(endpoint);
+            var response = await message.GetResponseAsync(endpoint).ConfigureAwait(false);
             var pdu = response.Pdu();
             if (pdu.ErrorStatus.ToInt32() != 0)
             {
@@ -184,7 +184,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                 seed = data.Item2;
                 if (seed == tableV)
                 {
-                    data = await HasNextAsync(version, endpoint, community, seed);
+                    data = await HasNextAsync(version, endpoint, community, seed).ConfigureAwait(false);
                     continue;
                 }
 
@@ -200,7 +200,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                     result++;
                 }
 
-                data = await HasNextAsync(version, endpoint, community, seed);
+                data = await HasNextAsync(version, endpoint, community, seed).ConfigureAwait(false);
             }
             while (data.Item1);
             return result;
@@ -233,7 +233,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                 community,
                 variables);
 
-            var response = await message.GetResponseAsync(endpoint);
+            var response = await message.GetResponseAsync(endpoint).ConfigureAwait(false);
             var pdu = response.Pdu();
             var errorFound = pdu.ErrorStatus.ToErrorCode() == ErrorCode.NoSuchName;
             return new Tuple<bool, Variable>(!errorFound, errorFound ? null : pdu.Variables[0]);
@@ -265,7 +265,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             IList<Variable> next;
             var result = 0;
             var message = report;
-            var data = await BulkHasNextAsync(version, endpoint, community, seed, maxRepetitions, privacy, message);
+            var data = await BulkHasNextAsync(version, endpoint, community, seed, maxRepetitions, privacy, message).ConfigureAwait(false);
             next = data.Item2;
             message = data.Item3;
             while (data.Item1)
@@ -294,7 +294,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                 }
 
                 seed = next[next.Count - 1];
-                data = await BulkHasNextAsync(version, endpoint, community, seed, maxRepetitions, privacy, message);
+                data = await BulkHasNextAsync(version, endpoint, community, seed, maxRepetitions, privacy, message).ConfigureAwait(false);
             }
 
         end:
@@ -316,7 +316,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         public static async Task SendTrapV1Async(EndPoint receiver, IPAddress agent, OctetString community, ObjectIdentifier enterprise, GenericCode generic, int specific, uint timestamp, IList<Variable> variables)
         {
             var message = new TrapV1Message(VersionCode.V1, agent, community, enterprise, generic, specific, timestamp, variables);
-            await message.SendAsync(receiver);
+            await message.SendAsync(receiver).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             }
 
             var message = new TrapV2Message(requestId, version, community, enterprise, timestamp, variables);
-            await message.SendAsync(receiver);
+            await message.SendAsync(receiver).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -407,7 +407,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                                           timestamp,
                                           variables);
 
-            var response = await message.GetResponseAsync(receiver);
+            var response = await message.GetResponseAsync(receiver).ConfigureAwait(false);
             if (response.Pdu().ErrorStatus.ToInt32() != 0)
             {
                 throw ErrorException.Create(
@@ -595,7 +595,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                                                       0,
                                                       maxRepetitions,
                                                       variables);
-            var reply = await request.GetResponseAsync(receiver);
+            var reply = await request.GetResponseAsync(receiver).ConfigureAwait(false);
             if (reply is ReportMessage)
             {
                 if (reply.Pdu().Variables.Count == 0)
@@ -624,7 +624,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                     privacy,
                     MaxMessageSize,
                     reply);
-                reply = await request.GetResponseAsync(receiver);
+                reply = await request.GetResponseAsync(receiver).ConfigureAwait(false);
             }
             else if (reply.Pdu().ErrorStatus.ToInt32() != 0)
             {

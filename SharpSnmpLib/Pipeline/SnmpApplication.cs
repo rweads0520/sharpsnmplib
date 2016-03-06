@@ -83,7 +83,7 @@ namespace Lextm.SharpSnmpLib.Pipeline
             // TODO: add authorization.
             OnMapRequestHandler();
             OnRequestHandlerExecute();
-            await OnLogRequest();
+            await OnLogRequest().ConfigureAwait(false);
             _owner.Reuse(this);
         }
 
@@ -129,7 +129,7 @@ namespace Lextm.SharpSnmpLib.Pipeline
 
         private async Task OnLogRequest()
         {
-            await Context.SendResponseAsync();
+            await Context.SendResponseAsync().ConfigureAwait(false);
             if (_logger == null)
             {
                 return;

@@ -31,17 +31,12 @@ namespace Lextm.SharpSnmpLib
     /// <summary>
     /// ObjectIdentifier type.
     /// </summary>
-#if !CF && !NETFX_CORE
     [TypeConverter(typeof(ObjectIdentifierConverter))]
-#endif
     [DataContract]
     public sealed class ObjectIdentifier : 
         ISnmpData, IEquatable<ObjectIdentifier>, IComparable<ObjectIdentifier>, IComparable
     {
         private readonly uint[] _oid;
-        #if (CF)
-        [NonSerialized]
-        #endif
         private readonly int _hashcode;
         private readonly byte[] _length;
 
@@ -293,9 +288,6 @@ namespace Lextm.SharpSnmpLib
             var result = new List<uint>();
             foreach (var s in parts.Where(s => !string.IsNullOrEmpty(s)))
             {
-#if CF
-                result.Add(uint.Parse(s));
-#else
                 uint temp;
                 if (uint.TryParse(s, out temp))
                 {
@@ -305,7 +297,6 @@ namespace Lextm.SharpSnmpLib
                 {
                     throw new ArgumentException(string.Format("Parameter {0} is out of 32 bit unsigned integer range", s), "dotted");
                 }
-#endif          
             }
 
             return result.ToArray();

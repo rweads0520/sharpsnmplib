@@ -26,9 +26,7 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
-#if (!SILVERLIGHT)
 using System.Runtime.Serialization; 
-#endif
 
 namespace Lextm.SharpSnmpLib
 {    
@@ -62,18 +60,6 @@ namespace Lextm.SharpSnmpLib
             : base(message, inner) 
         {
         }
-
-#if !CF && !NETFX_CORE
-        ///// <summary>
-        ///// Creates a <see cref="SnmpException"/> instance.
-        ///// </summary>
-        ///// <param name="info">Info</param>
-        ///// <param name="context">Context</param>
-        //protected SnmpException(SerializationInfo info, StreamingContext context)
-        //    : base(info, context)
-        //{
-        //}
-#endif
 
         /// <summary>
         /// Returns a <see cref="String"/> that represents this <see cref="SnmpException"/>.

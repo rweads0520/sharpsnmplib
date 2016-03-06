@@ -178,7 +178,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// Starts this instance.
         /// </summary>
         /// <exception cref="PortInUseException"/>
-        public void Start()
+        public async Task Start()
         {
             if (_disposed)
             {
@@ -186,7 +186,6 @@ namespace Lextm.SharpSnmpLib.Messaging
             }
 
             var addressFamily = Endpoint.AddressFamily;
-#if !CF
             if (addressFamily == AddressFamily.InterNetwork && !Socket.OSSupportsIPv4)
             {
                 throw new InvalidOperationException(Listener.ErrorIPv4NotSupported);
@@ -196,7 +195,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             {
                 throw new InvalidOperationException(Listener.ErrorIPv6NotSupported);
             }
-#endif
+
             var activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
             if (activeBefore == Active)
             {
@@ -221,17 +220,8 @@ namespace Lextm.SharpSnmpLib.Messaging
                 throw;
             }
 
-#if CF
-            _bufferSize = 8192;
-#else
             _bufferSize = _socket.ReceiveBufferSize;
-#endif
-
-#if ASYNC
-            Task.Factory.StartNew(() => AsyncBeginReceive());
-#else
-            Task.Factory.StartNew(() => ReceiveAsync());
-#endif
+            await ReceiveAsync();
         }
 
         /// <summary>
@@ -256,82 +246,6 @@ namespace Lextm.SharpSnmpLib.Messaging
             _socket = null;
         }
 
-#if ASYNC
-        private void AsyncBeginReceive()
-        {
-            while (true)
-            {
-                // If no more active, then stop.
-                if (Interlocked.Exchange(ref _active, _active) == Inactive)
-                {
-                    return;
-                }
-
-                byte[] buffer = new byte[_bufferSize];
-                EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
-                IAsyncResult iar = null;
-                try
-                {
-                    iar = _socket.BeginReceiveFrom(buffer, 0, _bufferSize, SocketFlags.None, ref remote, AsyncEndReceive, buffer);
-                }
-                catch (SocketException ex)
-                {
-                    // ignore WSAECONNRESET, http://bytes.com/topic/c-sharp/answers/237558-strange-udp-socket-problem
-                    if (ex.SocketErrorCode != SocketError.ConnectionReset)
-                    {
-                        // If the SnmpTrapListener was active, marks it as stopped and call HandleException.
-                        // If it was inactive, the exception is likely to result from this, and we raise nothing.
-                        long activeBefore = Interlocked.CompareExchange(ref _active, Inactive, Active);
-                        if (activeBefore == Active)
-                        {
-                            HandleException(ex);
-                        }
-                    }
-                }
-
-                if (iar != null)
-                {
-                    iar.AsyncWaitHandle.WaitOne();
-                }
-            }
-        }
-
-        private void AsyncEndReceive(IAsyncResult iar)
-        {
-            // If no more active, then stop. This discards the received packet, if any (indeed, we may be there either
-            // because we've received a packet, or because the socket has been closed).
-            if (Interlocked.Exchange(ref _active, _active) == Inactive)
-            {
-                return;
-            }
-
-            //// We start another receive operation.
-            //AsyncBeginReceive();
-
-            byte[] buffer = (byte[])iar.AsyncState;
-
-            try
-            {
-                EndPoint remote = _socket.AddressFamily == AddressFamily.InterNetwork ? new IPEndPoint(IPAddress.Any, 0) : new IPEndPoint(IPAddress.IPv6Any, 0);
-                int count = _socket.EndReceiveFrom(iar, ref remote);
-                HandleMessage(buffer, count, (IPEndPoint)remote);
-            }
-            catch (SocketException ex)
-            {
-                // ignore WSAECONNRESET, http://bytes.com/topic/c-sharp/answers/237558-strange-udp-socket-problem
-                if (ex.SocketErrorCode != SocketError.ConnectionReset)
-                {
-                    // If the SnmpTrapListener was active, marks it as stopped and call HandleException.
-                    // If it was inactive, the exception is likely to result from this, and we raise nothing.
-                    long activeBefore = Interlocked.CompareExchange(ref _active, Inactive, Active);
-                    if (activeBefore == Active)
-                    {
-                        HandleException(ex);
-                    }
-                }
-            }
-        }
-#else
         private async Task ReceiveAsync()
         {
             EndPoint remote = _socket.AddressFamily == AddressFamily.InterNetwork ? new IPEndPoint(IPAddress.Any, 0) : new IPEndPoint(IPAddress.IPv6Any, 0);
@@ -370,7 +284,6 @@ namespace Lextm.SharpSnmpLib.Messaging
                 }
             }
         }
-#endif
 
         private void HandleException(Exception exception)
         {

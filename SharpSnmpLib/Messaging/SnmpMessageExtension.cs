@@ -150,7 +150,7 @@ namespace Lextm.SharpSnmpLib.Messaging
 
             using (var socket = manager.GetSocket())
             {
-                await message.SendAsync(manager, socket);
+                await message.SendAsync(manager, socket).ConfigureAwait(false);
             }
         }
         
@@ -224,7 +224,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             
             using (var socket = receiver.GetSocket())
             {
-                return await request.GetResponseAsync(receiver, registry, socket);
+                return await request.GetResponseAsync(receiver, registry, socket).ConfigureAwait(false);
             }
         }
 
@@ -254,7 +254,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             
             using (var socket = receiver.GetSocket())
             {
-                return await request.GetResponseAsync(receiver, socket);
+                return await request.GetResponseAsync(receiver, socket).ConfigureAwait(false);
             }
         }
 
@@ -288,7 +288,7 @@ namespace Lextm.SharpSnmpLib.Messaging
                 registry.Add(request.Parameters.UserName, request.Privacy);
             }
 
-            return await request.GetResponseAsync(receiver, registry, udpSocket);
+            return await request.GetResponseAsync(receiver, registry, udpSocket).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -328,11 +328,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             }
 
             var bytes = request.ToBytes();
-#if CF
-            int bufSize = 8192;
-#else
             var bufSize = udpSocket.ReceiveBufferSize;
-#endif
 
             // Whatever you change, try to keep the Send and the Receive close to each other.
             using (var info = new SocketAsyncEventArgs())

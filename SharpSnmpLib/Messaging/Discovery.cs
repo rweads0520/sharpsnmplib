@@ -195,7 +195,7 @@ namespace Lextm.SharpSnmpLib.Messaging
 
             using (var socket = receiver.GetSocket())
             {
-                return (ReportMessage)await _discovery.GetResponseAsync(receiver, Empty, socket);
+                return (ReportMessage)await _discovery.GetResponseAsync(receiver, Empty, socket).ConfigureAwait(false);
             }
         }
 

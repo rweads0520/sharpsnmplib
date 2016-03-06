@@ -66,7 +66,7 @@ namespace Lextm.SharpSnmpLib
                     if (lastNet.Length == 0)
                         throw new FormatException("An invalid IP address was specified.");
 #if NET_2_1 //workaround for smcs, as it generate code that can't access string.GetEnumerator ()
-					foreach (char c in lastNet.ToCharArray ())
+                    foreach (char c in lastNet.ToCharArray ())
 #else
                     foreach (char c in lastNet)
 #endif

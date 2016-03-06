@@ -61,19 +61,13 @@ namespace Lextm.SharpSnmpLib.Pipeline
             }
 
             _catchAll = version == "*";
-            _version = _catchAll ? 
-            	new string[0] : 
-            	#if CF
-            	version.Split(new[] { ',' })
-            	#else
-            	version.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-            	#endif
-            	;
+            _version = _catchAll ?
+                new string[0] :
+                version.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             _command = command;
             _handler = handler;
         }
 
-        #if !CF
         /// <summary>
         /// Initializes a new instance of the <see cref="HandlerMapping"/> class.
         /// </summary>
@@ -120,8 +114,7 @@ namespace Lextm.SharpSnmpLib.Pipeline
             // TODO: how to load types from other assemblies.
             return null;
         }
-        #endif
-        
+
         /// <summary>
         /// Gets the handler.
         /// </summary>
