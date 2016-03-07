@@ -1,4 +1,6 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/7il4faq46rpgd2np)](https://ci.appveyor.com/project/lextm/sharpsnmplib) [![NuGet Version](https://img.shields.io/nuget/v/Lextm.SharpSnmpLib.svg?style=flat)](https://www.nuget.org/packages/Lextm.SharpSnmpLib/) [![NuGet Downloads](https://img.shields.io/nuget/dt/Lextm.SharpSnmpLib.svg?style=flat)](https://www.nuget.org/packages/Lextm.SharpSnmpLib/)
+| Build status | Stable Release (9.0) | Unstable Release (9.5 Alpha 2) |
+| ------------ | -------------------- | ------------------------------ |
+| [![Build status](https://ci.appveyor.com/api/projects/status/7il4faq46rpgd2np)](https://ci.appveyor.com/project/lextm/sharpsnmplib) | [![NuGet Downloads](https://img.shields.io/nuget/dt/Lextm.SharpSnmpLib.svg?style=flat)](https://www.nuget.org/packages/Lextm.SharpSnmpLib/) | [![NuGet Downloads](https://img.shields.io/nuget/dt/SharpSnmpLib.svg?style=flat)](https://www.nuget.org/packages/SharpSnmpLib/) |
 
 This is the source code repository of #SNMP Library. Visual Studio 2015 Update 1 is required to compile it on Windows.
 
