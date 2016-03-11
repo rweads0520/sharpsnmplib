@@ -3,6 +3,11 @@
     "copyright": "All rights reserved. (c) 2008-2016 Malcolm Crowe, Lex Li, and other contributors.",
     "description": "#SNMP (SharpSNMP) Library is an open source library for developers who target Microsoft .NET/Xamarin/Mono platforms. It's developed in C# and can be used for F#, VB.NET, Oxygene, and more.",
     "frameworks": {
+        "net451": {
+            "frameworkAssemblies": {
+                "System.Runtime.Serialization": "4.0.0.0"
+            }
+        },
         "dotnet5.4": {
             "dependencies": {
                 "Microsoft.CSharp": "4.0.1-beta-*",

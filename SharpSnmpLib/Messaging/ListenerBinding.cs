@@ -178,7 +178,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// Starts this instance.
         /// </summary>
         /// <exception cref="PortInUseException"/>
-        public async Task Start()
+        public async Task StartAsync()
         {
             if (_disposed)
             {

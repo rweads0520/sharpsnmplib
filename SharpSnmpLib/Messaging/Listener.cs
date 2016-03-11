@@ -31,6 +31,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using Lextm.SharpSnmpLib.Security;
+using System.Threading.Tasks;
 
 namespace Lextm.SharpSnmpLib.Messaging
 {
@@ -168,7 +169,7 @@ namespace Lextm.SharpSnmpLib.Messaging
         /// Starts this instance.
         /// </summary>
         /// <exception cref="PortInUseException"/>
-        public void Start()
+        public async Task StartAsync()
         {
             if (_disposed)
             {
@@ -184,7 +185,7 @@ namespace Lextm.SharpSnmpLib.Messaging
             {
                 foreach (var binding in Bindings)
                 {
-                    binding.Start();
+                    await binding.StartAsync();
                 }
             }
             catch (PortInUseException)

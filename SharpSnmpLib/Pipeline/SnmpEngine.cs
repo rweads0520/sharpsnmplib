@@ -28,6 +28,7 @@
 using System;
 using System.Diagnostics;
 using Lextm.SharpSnmpLib.Messaging;
+using System.Threading.Tasks;
 
 namespace Lextm.SharpSnmpLib.Pipeline
 {
@@ -112,7 +113,7 @@ namespace Lextm.SharpSnmpLib.Pipeline
         /// <summary>
         /// Starts the engine.
         /// </summary>
-        public void Start()
+        public async Task StartAsync()
         {
             if (_disposed)
             {
@@ -121,7 +122,7 @@ namespace Lextm.SharpSnmpLib.Pipeline
             
             Listener.ExceptionRaised += ListenerExceptionRaised;
             Listener.MessageReceived += ListenerMessageReceived;
-            Listener.Start();
+            await Listener.StartAsync();
         }
 
         /// <summary>
