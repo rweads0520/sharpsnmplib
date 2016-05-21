@@ -1,5 +1,5 @@
-﻿// sysDescr class.
-// Copyright (C) 2009-2010 Lex Li
+﻿// ifNumber class.
+// Copyright (C) 2013 Lex Li
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this
 // software and associated documentation files (the "Software"), to deal in the Software
@@ -17,40 +17,48 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+/*
+ * Created by SharpDevelop.
+ * User: Lex
+ * Date: 3/3/2013
+ * Time: 9:16 AM
+ * 
+ * To change this template use Tools | Options | Coding | Edit Standard Headers.
+ */
+
+using System.Net.NetworkInformation;
 using Lextm.SharpSnmpLib.Pipeline;
 
 namespace Lextm.SharpSnmpLib.Objects
 {
     /// <summary>
-    /// sysDescr object.
+    /// ifNumber object.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Descr")]
-    public sealed class SysDescr : ScalarObject
+    public sealed class IfNumber : ScalarObject
     {
-        private readonly OctetString _description = new OctetString(
-#if net451
-            "#SNMP Agent on .NET Framework 4.5"
-#else
-            "#SNMP Agent on .NET Core"
-#endif
-            );
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="SysDescr"/> class.
+        /// Initializes a new instance of the <see cref="IfNumber"/> class.
         /// </summary>
-        public SysDescr()
-            : base(new ObjectIdentifier("1.3.6.1.2.1.1.1.0"))
+        public IfNumber()
+            : base(new ObjectIdentifier("1.3.6.1.2.1.2.1.0"))
         {
         }
-
+        
         /// <summary>
         /// Gets or sets the data.
         /// </summary>
         /// <value>The data.</value>
-        public override ISnmpData Data
+        public override ISnmpData Data 
         {
-            get { return _description; }
-            set { throw new AccessFailureException(); }
+            get 
+            {
+                return new Integer32(NetworkInterface.GetAllNetworkInterfaces().Length);
+            }
+            
+            set 
+            {
+                throw new AccessFailureException();
+            }
         }
     }
 }
