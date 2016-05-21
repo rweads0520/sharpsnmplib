@@ -31,11 +31,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("SharpSnmpLib")]
-[assembly: AssemblyDescription("#SNMP Library for .NET/Mono")]
+[assembly: AssemblyDescription("#SNMP Library for .NET/Mono/Xamarin")]
 [assembly: AssemblyConfiguration("MIT/X11")]
 [assembly: AssemblyCompany("LeXtudio")]
 [assembly: AssemblyProduct("#SNMPLib")]
-[assembly: AssemblyCopyright("(C) 2008-2012 Malcolm Crowe, Lex Li, and other contributors.")]
+[assembly: AssemblyCopyright("(C) 2008-2016 Malcolm Crowe, Lex Li, and other contributors.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
