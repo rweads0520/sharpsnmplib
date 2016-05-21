@@ -47,5 +47,9 @@
         "tags": [ "snmp", "udp", "networking" ],
         "summary": "#SNMP open source SNMP library for .NET/Mono/Xamarin.",
         "projectUrl": "https://sharpsnmplib.codeplex.com/"
+    },
+    "buildOptions": {
+        "keyFile": "sharpsnmplib.snk",
+        "publicSign": true
     }
 }
