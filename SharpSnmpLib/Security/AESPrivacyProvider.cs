@@ -25,7 +25,7 @@
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
-#if net451
+#if net451 // .NET Standard 1.3 lacks of CFB mode.
 using System;
 using System.IO;
 using System.Security.Cryptography;

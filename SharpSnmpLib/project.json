@@ -1,6 +1,6 @@
 ﻿{
     "title": "#SNMP Library",
-    "version": "10.0.0-alpha6",
+    "version": "10.0.0-beta1",
     "language": "en-US",
     "authors": [ "Malcolm Crowe", "Lex Li", "other contributors" ],
     "copyright": "All rights reserved. (c) 2008-2016 Malcolm Crowe, Lex Li, and other contributors.",
@@ -19,23 +19,23 @@
                 "define": ["netstandard13"]
             },
             "dependencies": {
-                "Microsoft.CSharp": "4.0.1-rc2-*",
-                "System.Collections": "4.0.11-rc2-*",
-                "System.ComponentModel.TypeConverter": "4.0.1-rc2-*",
-                "System.Diagnostics.Debug": "4.0.11-rc2-*",
-                "System.Diagnostics.Tools": "4.0.1-rc2-*",
-                "System.Linq": "4.1.0-rc2-*",
-                "System.Net.NetworkInformation": "4.1.0-rc2-*",
-                "System.Net.Primitives": "4.0.11-rc2-*",
-                "System.Net.Sockets": "4.1.0-rc2-*",
-                "System.Security.Cryptography.Algorithms": "4.1.0-rc2-*",
-                "System.Reflection.Primitives": "4.0.1-rc2-*",
-                "System.Resources.ResourceManager": "4.0.1-rc2-*",
-                "System.Runtime": "4.1.0-rc2-*",
-                "System.Runtime.Extensions": "4.1.0-rc2-*",
-                "System.Runtime.Numerics": "4.0.1-rc2-*",
-                "System.Runtime.Serialization.Primitives": "4.1.1-rc2-*",
-                "System.Threading": "4.0.11-rc2-*"
+                "Microsoft.CSharp": "4.0.1",
+                "System.Collections": "4.0.11",
+                "System.ComponentModel.TypeConverter": "4.1.0",
+                "System.Diagnostics.Debug": "4.0.11",
+                "System.Diagnostics.Tools": "4.0.1",
+                "System.Linq": "4.1.0",
+                "System.Net.NetworkInformation": "4.1.0",
+                "System.Net.Primitives": "4.0.11",
+                "System.Net.Sockets": "4.1.0",
+                "System.Security.Cryptography.Algorithms": "4.2.0",
+                "System.Reflection.Primitives": "4.0.1",
+                "System.Resources.ResourceManager": "4.0.1",
+                "System.Runtime": "4.1.0",
+                "System.Runtime.Extensions": "4.1.0",
+                "System.Runtime.Numerics": "4.0.1",
+                "System.Runtime.Serialization.Primitives": "4.1.1",
+                "System.Threading": "4.0.11"
             }
         }
     },
