@@ -46,10 +46,15 @@
         "releaseNotes": "https://sharpsnmplib.codeplex.com/releases/view/116908",
         "tags": [ "snmp", "udp", "networking" ],
         "summary": "#SNMP open source SNMP library for .NET/Mono/Xamarin.",
-        "projectUrl": "https://sharpsnmplib.codeplex.com/"
+        "projectUrl": "https://sharpsnmplib.codeplex.com/",
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/lextm/sharpsnmplib.git"
+        }
     },
     "buildOptions": {
         "keyFile": "sharpsnmplib.snk",
-        "publicSign": true
+        "publicSign": true,
+        "outputName": "Lextm.SharpSnmpLib"
     }
 }
