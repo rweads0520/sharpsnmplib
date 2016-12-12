@@ -28,3 +28,5 @@ T4MVC.cs
 *.chk
 *.jrs
 *.ide
+/.vs/config/applicationhost.config
+*.dg

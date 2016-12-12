@@ -1,8 +1,8 @@
 ﻿{
     "title": "#SNMP Library",
-    "version": "10.0.0-beta1",
+    "version": "10.0.1",
     "language": "en-US",
-    "authors": [ "Malcolm Crowe", "Lex Li", "other contributors" ],
+    "authors": [ "Malcolm Crowe", "Lex Li", "Trilithic Foundation Team", "other contributors" ],
     "copyright": "All rights reserved. (c) 2008-2016 Malcolm Crowe, Lex Li, and other contributors.",
     "description": "#SNMP (SharpSNMP) Library is an open source library for developers who target Microsoft .NET/Xamarin/Mono platforms. It's developed in C# and can be used for F#, VB.NET, Oxygene, and more.",
     "frameworks": {
@@ -14,29 +14,14 @@
                 "System.Runtime.Serialization": "4.0.0.0"
             }
         },
-        "netstandard1.3": {
-            "buildOptions": {
-                "define": ["netstandard13"]
-            },
-            "dependencies": {
-                "Microsoft.CSharp": "4.0.1",
-                "System.Collections": "4.0.11",
-                "System.ComponentModel.TypeConverter": "4.1.0",
-                "System.Diagnostics.Debug": "4.0.11",
-                "System.Diagnostics.Tools": "4.0.1",
-                "System.Linq": "4.1.0",
-                "System.Net.NetworkInformation": "4.1.0",
-                "System.Net.Primitives": "4.0.11",
-                "System.Net.Sockets": "4.1.0",
-                "System.Security.Cryptography.Algorithms": "4.2.0",
-                "System.Reflection.Primitives": "4.0.1",
-                "System.Resources.ResourceManager": "4.0.1",
-                "System.Runtime": "4.1.0",
-                "System.Runtime.Extensions": "4.1.0",
-                "System.Runtime.Numerics": "4.0.1",
-                "System.Runtime.Serialization.Primitives": "4.1.1",
-                "System.Threading": "4.0.11"
-            }
+        "netstandard1.6": {
+          "imports": "dnxcore50",
+          "dependencies": {
+            "NETStandard.Library": "1.6.0",
+            "System.ComponentModel.TypeConverter": "4.1.0",
+            "System.Net.NetworkInformation": "4.1.0",
+            "System.Runtime.Serialization.Primitives": "4.1.1"
+          }
         }
     },
     "packOptions": {
@@ -53,8 +38,6 @@
         }
     },
     "buildOptions": {
-        "keyFile": "sharpsnmplib.snk",
-        "publicSign": true,
         "outputName": "Lextm.SharpSnmpLib"
     }
 }
