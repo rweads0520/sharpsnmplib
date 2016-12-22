@@ -1,6 +1,6 @@
 ﻿{
     "title": "#SNMP Library",
-    "version": "10.0.1",
+    "version": "20.0.1-trilithic",
     "language": "en-US",
     "authors": [ "Malcolm Crowe", "Lex Li", "Trilithic Foundation Team", "other contributors" ],
     "copyright": "All rights reserved. (c) 2008-2016 Malcolm Crowe, Lex Li, and other contributors.",
