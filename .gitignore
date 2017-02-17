@@ -29,3 +29,4 @@ T4MVC.cs
 *.jrs
 *.ide
 /.idea
+/SharpSnmpLib/project.lock.json
